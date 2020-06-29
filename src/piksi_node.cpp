@@ -38,9 +38,29 @@
  ******************************************************************************/
 
 #include <swiftnav_piksi/piksi_driver.h>
-
 #include <ros/ros.h>
 #include <cstdlib>
+#include <std_srvs/SetBool.h>
+#include <iostream>
+#include <string>
+#include "control_pi/utils.h"
+
+bool sendData;
+bool piksiIsConected;
+
+bool EstadoPiksi(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res){
+    if(piksiIsConected){
+        std::string pi = "Nodo Piksi ejecutándose. Obteniendo datos: " + bool_str(sendData);
+        res.message = pi;
+    }else{
+        std::string pi = "Nodo Piksi no está ejecutándose.";
+        res.message = pi;
+    }
+    res.success =  piksiIsConected;
+    ROS_INFO("Consultado estado de Piksi. Respuesta : [%s]-[%s]",bool_str(res.success).c_str(), res.message.c_str());
+    return true;
+}
+
 
 /*!
 * \brief Main Function
@@ -55,25 +75,26 @@
 *
 * \returns EXIT_SUCCESS, or an error state
 */
-int main( int argc, char *argv[] )
-{
+int main( int argc, char *argv[] ){
 	ros::init( argc, argv, "piksi_node" );
 
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_priv( "~" );
 
 	std::string port;
-	nh_priv.param( "port", port, (const std::string)"/dev/ttyUSB0" );
+	nh_priv.param( "port", port, (const std::string)"/dev/ttyUSB0");
 
-	swiftnav_piksi::PIKSI piksi( nh, nh_priv, port );
+	swiftnav_piksi::PIKSI piksi( nh, nh_priv, port);
+    ros::ServiceServer s_estado = nh.advertiseService<std_srvs::SetBool::Request, std_srvs::SetBool::Response>("EstadoPiksi", EstadoPiksi);
 
 	ROS_DEBUG( "Opening Piksi on %s", port.c_str( ) );
-	if( !piksi.PIKSIOpen( ) )
+	if( !piksi.PIKSIOpen( ) ){
+        piksiIsConected = false;
 		ROS_ERROR( "Failed to open Piksi on %s", port.c_str( ) );
-	else
+    }else{
+        piksiIsConected = true;
 		ROS_INFO( "Piksi opened successfully on %s", port.c_str( ) );
-
+    }
 	ros::spin( );
-
 	std::exit( EXIT_SUCCESS );
 }
