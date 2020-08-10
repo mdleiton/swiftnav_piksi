@@ -1,0 +1,9 @@
+Header header
+float64 north
+float64 east
+float64 down
+float64 lat
+float64 lot
+float64 alt
+int8 rtk_status
+int8 satellites

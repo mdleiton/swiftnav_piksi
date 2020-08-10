@@ -4,7 +4,7 @@ project(swiftnav_piksi)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS diagnostic_updater roscpp sensor_msgs std_srvs std_msgs)
+find_package(catkin REQUIRED COMPONENTS diagnostic_updater roscpp sensor_msgs std_srvs std_msgs message_generation)
 
 ## System dependencies are found with CMake's conventions
 #find_package(swiftnav REQUIRED)
@@ -18,24 +18,19 @@ find_library(SBP sbp)
 ## Declare ROS messages and services ##
 #######################################
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+        FILES
+        rtk.msg
+)
 
 ## Generate services in the 'srv' folder
 #add_service_files(
 #  FILES
 #)
-
-## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#  DEPENDENCIES
-#  std_msgs
-#)
-
+generate_messages(
+        DEPENDENCIES
+        std_msgs
+)
 ###################################################
 ## Declare things to be passed to other projects ##
 ###################################################
@@ -47,6 +42,7 @@ catkin_package(
    INCLUDE_DIRS include
    LIBRARIES piksi piksi_driver
    CATKIN_DEPENDS diagnostic_updater roscpp sensor_msgs std_srvs
+        message_runtime
 #  DEPENDS system_lib
 )
 
@@ -68,8 +64,12 @@ add_library(piksi_driver
   src/piksi_driver.cpp
 )
 
+add_library(driver src/driver.cpp)
+add_library(gps src/GPS.cpp)
+
 ## Declare a cpp executable
 add_executable(piksi_node src/piksi_node.cpp)
+add_executable(piksi_v2 src/piksi_v2.cpp)
 add_executable(piksitest src/piksi.c)
 
 ## Add dependencies to the executable
@@ -90,6 +90,16 @@ target_link_libraries(piksi_node
   piksi_driver
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(driver
+        sbp
+        piksi
+        )
+target_link_libraries(piksi_v2
+        driver
+        gps
+        ${catkin_LIBRARIES}
+        )
 
 #############
 ## Install ##
