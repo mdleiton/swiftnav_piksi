@@ -94,6 +94,8 @@ target_link_libraries(piksi_node
 target_link_libraries(driver
         sbp
         piksi
+        gsl
+        gslcblas
         )
 target_link_libraries(piksi_v2
         driver

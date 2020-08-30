@@ -52,6 +52,7 @@
 #include "control_pi/utils.h"
 
 GPS *gps;
+int k, n, metricType;
 
 bool EstadoPiksi(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res){
     if(gps->isConnected()){
@@ -82,7 +83,7 @@ int main( int argc, char *argv[] ){
 
     swiftnav_piksi::PIKSI piksi( nh, nh_priv, port);
     gps = new GPS();
-    gps->init(piksi);
+    gps->init(piksi, n, k, metricType);
     ros::ServiceServer s_estado = nh.advertiseService<std_srvs::SetBool::Request, std_srvs::SetBool::Response>("EstadoPiksi", EstadoPiksi);
     ros::Subscriber sub = nh.subscribe("inicioLectura", 1, inicio);
     ROS_DEBUG( "Opening Piksi on %s", port.c_str( ) );

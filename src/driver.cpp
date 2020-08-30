@@ -83,6 +83,18 @@ namespace swiftnav_piksi{
 
         this -> sendingData = false;
         this -> isConnected = false;
+        this -> w = gsl_movstat_alloc(this ->k);
+    }
+
+    void PIKSI::setK(int k){
+        this->k = k;
+    }
+    void PIKSI::setN(int n){
+        this->n = n;
+    }
+
+    void PIKSI::setMetricType(int metricType){
+        this->metricType = metricType;
     }
 
     PIKSI::~PIKSI(){
@@ -355,9 +367,21 @@ namespace swiftnav_piksi{
         driver->rtk_north = rtk_odom_msg->pose.pose.position.x;
         driver->rtk_east = rtk_odom_msg->pose.pose.position.y;
         driver->rtk_height = rtk_odom_msg->pose.pose.position.z;
+
+        pthread_mutex_lock(&driver->_mutex);
+        driver->nortD.push_back(rtk_odom_msg->pose.pose.position.x);
+        driver->eastD.push_back(rtk_odom_msg->pose.pose.position.y);
+        driver->zD.push_back(rtk_odom_msg->pose.pose.position.z);
+        pthread_mutex_unlock(&driver->_mutex);
+        pthread_mutex_lock(&driver->_mutex);
+        if(driver->nortD.size() == driver->n){
+            driver->nortD.clear();
+            driver->eastD.clear();
+            driver->zD.clear();
+        }
+        pthread_mutex_unlock(&driver->_mutex);
         // FIXME: rtk.h_accuracy doesn't work yet
         //driver->rtk_h_accuracy = rtk.h_accuracy / 1000.0;
-
         return;
     }
 
@@ -437,12 +461,30 @@ namespace swiftnav_piksi{
     void PIKSI::sendData(){
         this->sendingData = true;
         //stat.add( "Number of satellites used in GPS RTK solution", num_rtk_satellites );
+        pthread_mutex_lock(&_mutex);
+        this -> nort = gsl_vector_alloc(nortD.size());
+        this -> east = gsl_vector_alloc(nortD.size());
+        this -> z = gsl_vector_alloc(nortD.size());
+        for (int i = 0; i < nortD.size(); i++) {
+            gsl_vector_set(nort, i, nortD[i]);
+            gsl_vector_set(east, i, eastD[i]);
+            gsl_vector_set(z, i, zD[i]);
+        }
+        this -> nortResult = gsl_vector_alloc(this->n);
+        this -> eastResult = gsl_vector_alloc(this->n);
+        this -> zResult = gsl_vector_alloc(this->n);
+
+        gsl_movstat_mean(GSL_MOVSTAT_END_TRUNCATE, nort, nortResult, w);
+        gsl_movstat_mean(GSL_MOVSTAT_END_TRUNCATE, east, eastResult, w);
+        gsl_movstat_mean(GSL_MOVSTAT_END_TRUNCATE, z, zResult, w);
+        pthread_mutex_unlock(&_mutex);
+
         swiftnav_piksi::rtk rtk;
         //Header header
         rtk.header.stamp = time.data;
-        rtk.north = rtk_north;
-        rtk.east = rtk_east;
-        rtk.down = rtk_height;
+        rtk.north = gsl_vector_get(nortResult, nortD.size()-1);
+        rtk.east = gsl_vector_get(eastResult, nortD.size()-1);
+        rtk.down = gsl_vector_get(zResult, nortD.size()-1);
         rtk.satellites = num_llh_satellites;
         rtk.lat = llh_lat;
         rtk.lot = llh_lon;
@@ -451,6 +493,12 @@ namespace swiftnav_piksi{
 
         rtkA_pub.publish(rtk);
         this->sendingData = false;
+
+        pthread_mutex_lock(&_mutex);
+        this->nortD.clear();
+        this->eastD.clear();
+        this->zD.clear();
+        pthread_mutex_unlock(&_mutex);
     }
 
 }

@@ -8,8 +8,11 @@ GPS::GPS(){
 
 };
 
-void GPS::init(swiftnav_piksi::PIKSI& piksi){
+void GPS::init(swiftnav_piksi::PIKSI& piksi, int n, int k, int metricType){
     this->piksi = &piksi;
+    this->piksi -> setK(k);
+    this->piksi -> setN(n);
+    this->piksi -> setMetricType(metricType);
 };
 
 bool GPS::start(){

@@ -46,11 +46,20 @@
 #include <ros/ros.h>
 #include <ros/rate.h>
 #include <tf/tf.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/publisher.h>
 #include <diagnostic_updater/update_functions.h>
 #include <nav_msgs/Odometry.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_movstat.h>
+#include <gsl/gsl_vector.h>
+#include <vector>
+#include <iostream>
 
 #include <boost/thread.hpp>
 
@@ -73,7 +82,6 @@ namespace swiftnav_piksi
         std_msgs::Time time;
         bool sendingData;
         bool isConnected;
-
         bool isSendingData();
         void setSendingData(bool sendingData);
         bool PIKSIOpen( );
@@ -81,6 +89,27 @@ namespace swiftnav_piksi
         void sendData();
 
         void setTime(std_msgs::Time time);
+
+        /* rolling windows */
+        int k;
+        gsl_movstat_workspace * w;
+        gsl_vector *nort;
+        gsl_vector *east;
+        gsl_vector *z;
+
+        pthread_mutex_t _mutex;
+        std::vector<float> nortD;
+        std::vector<float> eastD;
+        std::vector<float> zD;
+        gsl_vector *nortResult;
+        gsl_vector *eastResult;
+        gsl_vector *zResult;
+        int metricType;
+        int n;
+
+        void setK(int k);
+        void setN(int n);
+        void setMetricType(int metricType);
     private:
         bool PIKSIOpenNoLock( );
         void PIKSICloseNoLock( );
