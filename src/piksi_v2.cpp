@@ -52,7 +52,7 @@
 #include "control_pi/utils.h"
 
 GPS *gps;
-int k, n, metricType;
+int k=5, n=10, metricType;
 
 bool EstadoPiksi(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res){
     if(gps->isConnected()){
