@@ -106,10 +106,15 @@ namespace swiftnav_piksi
         gsl_vector *zResult;
         int metricType;
         int n;
+        double baseNorth=0.0;
+        double baseEast=0.0;
+        double baseAlt=0.0;
 
         void setK(int k);
         void setN(int n);
         void setMetricType(int metricType);
+        void setOffsetNED(double offsetNED[3]);
+
     private:
         bool PIKSIOpenNoLock( );
         void PIKSICloseNoLock( );

@@ -19,6 +19,7 @@ class GPS {
         void setSendingData(bool sendingData);
         bool isConnected();
         void sendData();
+        void setOffsetNED(double offsetNED[3]);
 
 };
 

@@ -20,6 +20,10 @@ bool GPS::start(){
     return piksi -> isConnected;
 }
 
+void GPS::setOffsetNED(double offsetNED[3]){
+    piksi -> setOffsetNED(offsetNED);
+}
+
 void GPS::setTime(std_msgs::Time time){
     piksi -> setTime(time);
 }

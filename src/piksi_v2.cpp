@@ -53,6 +53,15 @@
 
 GPS *gps;
 int k=5, n=10, metricType;
+double baseNED[3] = {0.0, 0.0, 0.0};
+
+void getParameters(){
+    ros::param::get("EASTH_BASE_RTK", baseNED[0]);
+    ros::param::get("NORTH_BASE_RTK", baseNED[1]);
+    ros::param::get("DOWN_BASE_RTK", baseNED[2]);
+    ros::param::get("K", k);
+    ros::param::get("N", n);
+}
 
 bool EstadoPiksi(std_srvs::SetBool::Request  &req, std_srvs::SetBool::Response &res){
     if(gps->isConnected()){
@@ -83,10 +92,14 @@ int main( int argc, char *argv[] ){
 
     swiftnav_piksi::PIKSI piksi( nh, nh_priv, port);
     gps = new GPS();
+    getParameters();
+
     gps->init(piksi, n, k, metricType);
+    gps->setOffsetNED(baseNED);
     ros::ServiceServer s_estado = nh.advertiseService<std_srvs::SetBool::Request, std_srvs::SetBool::Response>("EstadoPiksi", EstadoPiksi);
     ros::Subscriber sub = nh.subscribe("inicioLectura", 1, inicio);
     ROS_DEBUG( "Opening Piksi on %s", port.c_str( ) );
+
     if(!gps->start()){
         ROS_ERROR( "Failed to open Piksi on %s", port.c_str( ) );
     }else{

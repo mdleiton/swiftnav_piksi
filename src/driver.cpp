@@ -493,8 +493,8 @@ namespace swiftnav_piksi{
             rtk.north =nortD[0];
             rtk.east = eastD[0];
         }else{
-            rtk.north = rtk_north;
-            rtk.east = rtk_east;
+            rtk.north = rtk_north + this->baseNorth;
+            rtk.east = rtk_east + this->baseEast;
         }
         this->nortD.clear();
         this->eastD.clear();
@@ -510,6 +510,12 @@ namespace swiftnav_piksi{
         rtk.rtk_status = rtk_status;
         rtkA_pub.publish(rtk);
         this->sendingData = false;
+    }
+
+    void PIKSI::setOffsetNED(double offsetNED[3]){
+        this->baseNorth=offsetNED[1];
+        this->baseEast=offsetNED[0];
+        this->baseAlt=offsetNED[2];
     }
 
 }
